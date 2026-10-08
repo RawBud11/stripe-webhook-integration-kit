@@ -25,10 +25,23 @@ def test_every_difference_is_explained_and_only_differences_are():
         assert (case["difference"] is None) == agrees, case["name"]
 
 
-def test_small_future_skew_is_accepted_by_us():
-    (case,) = [c for c in CASES if c["name"] == "future_small_clock_skew"]
-    assert 0 < int(case["header"].split(",")[0][2:]) - case["now"] <= case["tolerance"]
-    assert our_outcome(case) == "valid"
+# Our rule: |now - t| <= tolerance is accepted, so both edges are inclusive.
+BOUNDARIES = {
+    "past_at_tolerance_edge": (-300, "valid"),
+    "expired": (-301, "TimestampOutsideToleranceError"),
+    "future_small_clock_skew": (5, "valid"),
+    "future_at_tolerance_edge": (300, "valid"),
+    "future_beyond_tolerance": (301, "TimestampOutsideToleranceError"),
+}
+
+
+@pytest.mark.parametrize("name", BOUNDARIES)
+def test_timestamp_boundaries(name):
+    (case,) = [c for c in CASES if c["name"] == name]
+    offset, expected = BOUNDARIES[name]
+    assert case["tolerance"] == 300
+    assert int(case["header"].split(",")[0][2:]) - case["now"] == offset
+    assert our_outcome(case) == expected
 
 
 @pytest.mark.parametrize("case", CASES, ids=lambda c: c["name"])

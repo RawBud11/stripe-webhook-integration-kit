@@ -298,9 +298,18 @@ manually", "Preventing replay attacks", "Roll endpoint signing secrets") and
    values at configuration time.
 6. Use the raw, unmodified body; any re-serialisation breaks verification.
 
-Deliberate difference: the official Python library only rejects timestamps that are too
-old. This project also rejects timestamps more than the tolerance in the future. The
-cross-check tests account for this one case explicitly.
+Differences from the official Python library (stripe 16.0.0) are listed, with reasons, in
+`tests/fixtures/signature_vectors.json` and checked by tests marked `library_behaviour`.
+
+Timestamp boundaries (tolerance 300 s; `t - now` shown; this table moves to the README):
+
+| `t - now` | Ours (`abs(now - t) <= tol`) | Library (`t < now - tol` rejects) |
+| --- | --- | --- |
+| -301 | reject | reject |
+| -300 | accept (inclusive) | accept (inclusive) |
+| +5 | accept | accept |
+| +300 | accept (inclusive) | accept |
+| +301 | reject | accept (no future check) |
 
 ## 7. Testing strategy
 

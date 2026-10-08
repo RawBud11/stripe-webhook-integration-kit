@@ -78,6 +78,13 @@ def build_cases() -> list[dict]:
             ACCEPTED,
         ),
         _case("future_small_clock_skew", body, f"t={NOW + 5},v1={v1(NOW + 5)}", VALID, ACCEPTED),
+        _case(
+            "future_at_tolerance_edge",
+            body,
+            f"t={NOW + TOLERANCE},v1={v1(NOW + TOLERANCE)}",
+            VALID,
+            ACCEPTED,
+        ),
         # --- both reject -----------------------------------------------------------
         _case("tampered_body", body + b" ", good, "SignatureMismatchError", SVE),
         _case(
