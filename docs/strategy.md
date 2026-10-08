@@ -396,3 +396,7 @@ Timestamp boundaries (tolerance 300 s; `t - now` shown; this table moves to the 
   `data.object.id` plus `event.type`. M1 stores `session_id` (indexed, not unique) so
   this is possible; M2 decides whether to treat a second event with the same
   `session_id` and `type` as a duplicate, and what to do with it.
+- **Events with `livemode: true` (decide in step 6).** The project is test-mode only, so
+  a correctly signed event claiming `livemode: true` should not be stored. Step 6
+  proposes the response code, with reasons (it affects whether a real sender would
+  retry), before implementing it.
