@@ -29,6 +29,26 @@ python -m venv .venv && .venv/Scripts/pip install -e ".[dev,test]"   # bin/ on L
 Default host ports: API `127.0.0.1:8001`, Postgres `127.0.0.1:5433` (`API_PORT`,
 `POSTGRES_PORT` in `.env`).
 
+### Pinned dependencies
+
+Direct dependencies are pinned in `pyproject.toml`. Indirect ones (starlette, pydantic,
+anyio, ...) are pinned by `constraints.txt`, which the Docker image installs with
+`pip install -c constraints.txt .`. A constraint only applies to a package that actually
+gets installed, so the dev and test entries in the file do not end up in the image.
+
+The file is a `pip freeze` of the working venv. To regenerate it after changing a
+dependency, install the change in the venv, run the tests, then:
+
+```sh
+.venv/Scripts/python -m pip freeze --exclude-editable > constraints.txt   # Git Bash, Linux, macOS
+```
+
+In Windows PowerShell 5.1, `>` writes UTF-16, which pip cannot read; use
+`... | Out-File -Encoding ascii constraints.txt` instead. Rebuild the image afterwards.
+The freeze comes from a Windows venv, so a Linux-only dependency would be missing from
+it; compare `docker compose run --rm --no-deps api pip freeze` against the file after
+rebuilding.
+
 ## The endpoint
 
 `POST /webhooks/stripe`

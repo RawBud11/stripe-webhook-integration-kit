@@ -8,10 +8,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Runtime dependencies only (pinned in pyproject.toml); no dev or test extras.
-COPY pyproject.toml ./
+# Runtime dependencies only; no dev or test extras. Direct dependencies are pinned in
+# pyproject.toml, indirect ones by constraints.txt (see the README to regenerate it).
+COPY pyproject.toml constraints.txt ./
 COPY src ./src
-RUN pip install . && rm -rf build
+RUN pip install -c constraints.txt . && rm -rf build
 
 COPY alembic.ini ./
 COPY migrations ./migrations
