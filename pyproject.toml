@@ -34,6 +34,9 @@ where = ["src"]
 testpaths = ["tests"]
 pythonpath = ["tools"]
 addopts = "-ra"
+markers = [
+    "library_behaviour: documents behaviour of the stripe library where it differs from ours",
+]
 
 [tool.ruff]
 line-length = 100
