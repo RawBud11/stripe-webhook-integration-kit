@@ -43,6 +43,41 @@ None so far.
   2026-10-08): stored, 200, `session_id` NULL, plus a warning log with event id and type
   only. (`ParsedEvent.missing_session_id`, tested in `test_webhook_endpoint.py`)
 
+## Step 7 plan: API container, smoke test, README stub (2026-10-08, unattended)
+
+Written before building, as asked; approval of the plan was waived.
+
+1. **Dockerfile** on `python:3.13.16-slim-bookworm` (newest exact 3.13 tag on Docker Hub
+   on 2026-10-08; local venv is 3.13.1, so patch versions differ). Installs the package
+   with its pinned runtime dependencies only (no dev/test extras), runs as a non-root
+   user, and starts with `alembic upgrade head` then
+   `uvicorn integrationkit.app:create_app --factory`. `.dockerignore` keeps `.env`,
+   `.venv`, `.git`, tests and caches out of the image.
+2. **Compose `api` service:** waits for a healthy `db`, gets `WEBHOOK_SECRET` from `.env`
+   and a `DATABASE_URL` that points at `db:5432` inside the Compose network. Host port
+   `127.0.0.1:${API_PORT:-8000}`. Health check is a TCP connect from inside the
+   container, so no extra endpoint is added.
+3. **Logging:** a uvicorn JSON log config (`docker/uvicorn-logging.json`) so the
+   `integrationkit` logger writes INFO lines to stdout. No new dependency (JSON configs
+   need none).
+4. **Smoke script** `tools/smoke.py`: builds every simulator case with a fresh seed, sends
+   it to the running API, checks the status code (200 or 400), then connects to the dev
+   database and checks that every accepted event is stored exactly once with the same
+   raw bytes, and that no rejected event was stored. Exit code 0 only if all checks pass.
+   Uses the simulator's functions and SQLAlchemy (already a dependency). Unit tests check
+   that every case's expected status agrees with our verifier, without a server.
+5. **README stub:** what the project is, the "all events are simulated" statement,
+   quickstart, the notes requested in the strategy (payload subset, JSON formatting,
+   fake id markers, `api_version`), the timestamp boundary table and the library
+   differences.
+6. **Run it for real:** `docker compose up -d --build --wait`, then the smoke script
+   against `http://127.0.0.1:8000/webhooks/stripe`, then check the container logs.
+   Results go to `docs/morning-report.md`.
+
+Rules for the night: no new dependencies, no push, no history rewriting, stage by
+explicit path, every test run under `timeout`, three failed attempts at one thing then
+simplify and log it here.
+
 ## Open question for you: httpx vs httpx2 in the test client (2026-10-08)
 
 Not installed; tests keep using `httpx==0.28.1`. What I found:
