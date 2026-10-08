@@ -125,3 +125,11 @@ See the section of that name in [docs/strategy.md](docs/strategy.md). In short: 
 a correct, tested implementation of the documented scheme and of webhook intake
 reliability; it does not show that it has handled real Stripe traffic, because it has
 not.
+
+## Limitations
+
+- **Migrations run at container start.** The API container runs `alembic upgrade head`
+  before it serves requests. That is fine for one instance, but not for several: they
+  would all try to upgrade at the same time, and one could serve requests against a
+  schema another is still changing. With more than one instance, migrations belong in a
+  separate step that runs once before the new instances start.
