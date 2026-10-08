@@ -1,0 +1,6 @@
+# Normalise text files to LF in the repository and working tree.
+* text=auto eol=lf
+
+# Fixtures and signature test vectors: git must never alter their bytes,
+# because signatures are computed over exact bytes.
+tests/fixtures/** -text
