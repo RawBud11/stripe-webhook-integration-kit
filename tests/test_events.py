@@ -203,3 +203,13 @@ def test_error_messages_contain_no_payload_content():
         with pytest.raises(InvalidEventError) as exc_info:
             parse_event(raw)
         assert secretish not in str(exc_info.value)
+
+
+def test_missing_session_id_flag():
+    assert parse_event(body(event())).missing_session_id is False
+    bad = event(data={"object": {"id": "not-a-session"}})
+    assert parse_event(body(bad)).missing_session_id is True
+    no_object = event(data={})
+    assert parse_event(body(no_object)).missing_session_id is True
+    other_type = event(type="invoice.paid", data={"object": {"id": "in_test_1"}})
+    assert parse_event(body(other_type)).missing_session_id is False

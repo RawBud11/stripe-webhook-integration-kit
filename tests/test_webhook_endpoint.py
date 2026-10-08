@@ -322,3 +322,40 @@ def test_only_post_is_allowed():
     with client_for(engine) as client:
         assert client.get(URL).status_code == 405
         assert client.get("/docs").status_code == 404
+
+
+@pytest.mark.db
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param({"object": {"id": "not_a_cs_id_private_value"}}, id="malformed"),
+        pytest.param({"object": {"customer_email": "private@example.com"}}, id="missing"),
+        pytest.param({}, id="no-object"),
+    ],
+)
+def test_checkout_event_without_usable_session_id_is_stored_with_warning(
+    client, migrated_db, caplog, data
+):
+    event = base_event(data=data)
+    raw, headers = signed(event)
+    caplog.set_level(logging.DEBUG, logger=LOGGER)
+
+    assert client.post(URL, content=raw, headers=headers).status_code == 200
+
+    (row,) = stored(migrated_db)
+    assert row.session_id is None
+    assert row.raw_body == raw
+    (warning,) = [r for r in caplog.records if r.levelno == logging.WARNING]
+    message = warning.getMessage()
+    assert event["id"] in message and event["type"] in message
+    for record in caplog.records:
+        text = record.getMessage()
+        assert "private" not in text
+        assert raw.decode() not in text
+
+
+@pytest.mark.db
+def test_valid_checkout_event_logs_no_warning(client, migrated_db, caplog):
+    caplog.set_level(logging.DEBUG, logger=LOGGER)
+    assert post(client, simulated()[0]).status_code == 200
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]

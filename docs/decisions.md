@@ -39,9 +39,9 @@ None so far.
 - **Logging:** logger `integrationkit.webhooks`. Rejections log only the error class or a
   fixed message; stored events log id and type. Application logging is not yet configured
   for the running server (step 7).
-- **Pending your decision, not special-cased:** a `checkout.session.*` event whose
-  `data.object.id` is missing or malformed currently follows the general rule (stored,
-  200, `session_id` NULL). There is no dedicated code or test for it yet.
+- **`checkout.session.*` with a missing or malformed `data.object.id`** (approved
+  2026-10-08): stored, 200, `session_id` NULL, plus a warning log with event id and type
+  only. (`ParsedEvent.missing_session_id`, tested in `test_webhook_endpoint.py`)
 
 ## Session note: the 2026-10-07 hang
 

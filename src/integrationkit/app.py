@@ -104,6 +104,14 @@ def create_app(
 
         if event.payload_error:
             log.warning("stored event %s without payload: %s", event.event_id, event.payload_error)
+        if event.missing_session_id:
+            # Only the id and type, as for livemode: never the object id or payload.
+            log.warning(
+                "stored event %s of type %s without session_id: data.object.id missing or "
+                "malformed",
+                event.event_id,
+                event.event_type,
+            )
         log.info(
             "%s event %s of type %s",
             "stored" if inserted else "duplicate",

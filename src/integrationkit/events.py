@@ -39,6 +39,11 @@ class ParsedEvent:
     payload: dict[str, Any] | None
     payload_error: str | None
 
+    @property
+    def missing_session_id(self) -> bool:
+        """A checkout.session.* event whose data.object.id was missing or malformed."""
+        return self.event_type.startswith(CHECKOUT_SESSION_PREFIX) and self.session_id is None
+
 
 def _reject_constant(name: str) -> None:
     raise ValueError("NaN and Infinity are not valid JSON")
