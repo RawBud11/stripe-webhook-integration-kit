@@ -26,6 +26,11 @@ Status: approved 2026-10-07. Nothing here has been built or run yet.
 - Thin events (`v2` event notifications). Stripe's docs now recommend thin events for new
   integrations; this project uses the snapshot `checkout.session.completed` shape because
   it carries the data needed for a spreadsheet row without an API call.
+- `checkout.session.async_payment_succeeded` / `_failed`. A completed session can still
+  have `payment_status: "unpaid"` when a delayed payment method is used; this project
+  records the status as received and does nothing further. A real system would listen for
+  those follow-up events and update the order (and its sheet row) when the money actually
+  arrives or the payment fails.
 - Exactly-once delivery. The design is at-least-once with idempotent sinks.
 - Production deployment, HTTPS termination, IP allowlisting, horizontal scaling, load tests
   beyond a local smoke level.
@@ -134,6 +139,7 @@ CREATE TABLE webhook_events (
     id              BIGSERIAL PRIMARY KEY,
     event_id        TEXT        NOT NULL UNIQUE,      -- evt_test_...
     event_type      TEXT        NOT NULL,             -- checkout.session.completed
+    session_id      TEXT,                             -- data.object.id (cs_test_...)
     livemode        BOOLEAN     NOT NULL,             -- always false here
     raw_body        BYTEA       NOT NULL,             -- exact bytes that were verified
     payload         JSONB       NOT NULL,             -- parsed copy for querying
@@ -141,6 +147,8 @@ CREATE TABLE webhook_events (
     received_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
     duplicate_count INTEGER     NOT NULL DEFAULT 0    -- times seen again after first
 );
+-- Indexed but not unique: Stripe can send two distinct events for the same object.
+CREATE INDEX webhook_events_session_idx ON webhook_events (session_id);
 
 CREATE TYPE job_status AS ENUM ('pending', 'running', 'retrying', 'succeeded', 'dead');
 
@@ -182,6 +190,11 @@ Replay sets `status='pending'`, `attempts=0`, `next_run_at=now()`, increments
 Rows the sink writes (CSV columns): `event_id, event_created, session_id, customer_email,
 amount_total, currency, payment_status, synced_at`.
 
+`amount_total` is written as the integer Stripe sends, in the currency's smallest unit
+(`2198` with `usd` means 21.98 USD; `500` with `jpy` means 500 JPY), always next to
+`currency`. Nothing divides by 100, because that is wrong for zero-decimal currencies
+(confirmed in Stripe's currencies docs).
+
 ### How a sink finds "the row" for an event
 
 `event_id` is always the first column and is the only key. Sinks never store a row
@@ -216,7 +229,10 @@ Done when:
       malformed header, non-integer `t`, tolerance of 0 refused.
 - [ ] Simulator produces each variant: valid, `--tamper-body`, `--wrong-secret`,
       `--expired`, `--duplicate`, `--rolled-secret`, `--missing-header`,
-      `--malformed-header`, and can print or POST the request.
+      `--malformed-header`, plus `--with-v0` and `--payment-status unpaid`, and can print
+      or POST the request. `--send` targets only localhost unless `--allow-remote` is
+      given, uses a timeout, and `--expect STATUS` sets the exit code. `--print` never
+      shows a secret.
 - [ ] Running each simulator variant against the local API gives the expected status
       (200 or 400), shown in a recorded test run.
 - [ ] A valid event is stored with `raw_body` byte-identical to what was sent.
@@ -326,7 +342,11 @@ cross-check tests account for this one case explicitly.
 2. Architecture diagram and the five guarantees (verified, stored once, fast ack, retried,
    replayable).
 3. Quickstart: `cp .env.example .env`, `docker compose up`, run simulator, open the CSV.
-4. Simulator usage and the broken-event variants.
+4. Simulator usage and the broken-event variants. Notes: the payload is a documented
+   subset of the real objects; its JSON formatting is not Stripe's, which does not matter
+   because verification runs over raw bytes; `evt_test_` and `pi_test_` are this
+   project's fake markers, while `cs_test_` is Stripe's real test-mode prefix;
+   `api_version` is copied from Stripe's docs example and was not tested against.
 5. Signature verification: how it follows Stripe's documented scheme, and the SDK
    cross-check.
 6. Reliability: idempotency, outbox, worker, backoff with jitter, dead-letter, replay.
@@ -359,3 +379,11 @@ cross-check tests account for this one case explicitly.
 - Exactly-once delivery (the design deliberately provides at-least-once plus idempotent
   writes).
 - Anything about the Google Sheets API unless the optional sink is built and tested.
+
+## 11. Open questions
+
+- **Second duplicate check (decide in M2).** Stripe's docs say two separate Event objects
+  are sometimes generated for the same change, and suggest identifying them by
+  `data.object.id` plus `event.type`. M1 stores `session_id` (indexed, not unique) so
+  this is possible; M2 decides whether to treat a second event with the same
+  `session_id` and `type` as a duplicate, and what to do with it.
