@@ -43,6 +43,34 @@ None so far.
   2026-10-08): stored, 200, `session_id` NULL, plus a warning log with event id and type
   only. (`ParsedEvent.missing_session_id`, tested in `test_webhook_endpoint.py`)
 
+## Open question for you: httpx vs httpx2 in the test client (2026-10-08)
+
+Not installed; tests keep using `httpx==0.28.1`. What I found:
+
+- **The warning** comes from the installed Starlette 1.7.0
+  (`starlette/testclient.py`): it imports `httpx2` if present, otherwise falls back to
+  `httpx` and emits `StarletteDeprecationWarning: Using httpx with starlette.testclient is
+  deprecated; install httpx2 instead.` With neither installed, the test client fails.
+- **Starlette docs** (`docs/testclient.md` in the official repo, github.com/Kludex/starlette;
+  www.starlette.io did not resolve from here): "The `TestClient` is built on `httpx2`.
+  Plain `httpx` is still supported, but deprecated - install `httpx2` (included in
+  `starlette[full]`) instead."
+- **Starlette release notes** (`docs/release-notes.md`, same repo): 1.2.0 (2026-05-28)
+  "Support httpx2 in the test client"; 1.2.1 (2026-05-31) uses httpx2 for type checking;
+  1.3.0 (2026-06-11) adds httpx2 to the `full` extra. No entry announces a removal date
+  for plain `httpx`, and I found no release-note line that names the deprecation itself;
+  only the docs page and the code state it.
+- **httpx2 on PyPI:** latest 2.13.1 (2026-09-23), 18 releases, first upload 0.0.0 on
+  2026-05-11. Author: Tom Christie (the original httpx author); maintainer: Pydantic
+  Services Inc.; source and homepage github.com/pydantic/httpx2. Requires Python >= 3.10
+  and pulls in `httpcore2`, `anyio`, `idna`, `truststore`. No license field in the PyPI
+  metadata (I did not check the repository's licence file).
+- **Impact today:** none. One warning per test run, all tests pass. If a future Starlette
+  drops `httpx`, the test client stops importing and every endpoint test fails loudly.
+
+Question: switch the dev extra from `httpx` to `httpx2` now, later (for example when
+Starlette announces removal), or never?
+
 ## Session note: the 2026-10-07 hang
 
 The command that stalled ran `ruff format` (it completed: the files were rewritten at
