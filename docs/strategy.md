@@ -398,7 +398,13 @@ Timestamp boundaries (tolerance 300 s; `t - now` shown; this table moves to the 
   `data.object.id` plus `event.type`. M1 stores `session_id` (indexed, not unique) so
   this is possible; M2 decides whether to treat a second event with the same
   `session_id` and `type` as a duplicate, and what to do with it.
-- **Events with `livemode: true` (decide in step 6).** The project is test-mode only, so
-  a correctly signed event claiming `livemode: true` should not be stored. Step 6
-  proposes the response code, with reasons (it affects whether a real sender would
-  retry), before implementing it.
+- **Real Stripe delivery.** M1 has only been verified with simulated events; a real
+  Stripe test-mode delivery is still pending.
+
+### Resolved
+
+- **Events with `livemode: true` (resolved in step 6).** A correctly signed event
+  claiming `livemode: true` is not stored and gets `422` with a minimal log line.
+  See `src/integrationkit/app.py` (the `event.livemode` check),
+  `test_livemode_event_is_refused_with_422_and_minimal_log` in
+  `tests/test_webhook_endpoint.py`, and the response table in `README.md`.

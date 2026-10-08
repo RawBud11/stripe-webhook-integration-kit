@@ -8,6 +8,14 @@ Anything here can be revisited.
 
 None so far.
 
+## Review answers (2026-10-08)
+
+- **Step 7 overnight choices approved:** host port 8001, image
+  `python:3.13.16-slim-bookworm`, migrations at container start, TCP connect health
+  check, smoke data left in the dev database.
+- **httpx vs httpx2:** switch later. The question below stays open.
+- **Second duplicate check (`session_id` + `type`):** decided in the M2 plan.
+
 ## Step 6: webhook endpoint (2026-10-08)
 
 - **Event id format:** `evt_` followed by 1-250 ASCII letters, digits or underscores.
