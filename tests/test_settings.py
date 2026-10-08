@@ -50,6 +50,16 @@ def test_secret_not_exposed_in_repr_or_str(monkeypatch):
     assert FAKE_SECRET not in str(settings)
 
 
+def test_database_url_not_exposed_in_repr_or_str(monkeypatch):
+    url = "postgresql+psycopg://user:fake_db_password@db.example.com:5432/app"
+    monkeypatch.setenv("WEBHOOK_SECRET", FAKE_SECRET)
+    monkeypatch.setenv("DATABASE_URL", url)
+    settings = make_settings()
+    assert settings.database_url.get_secret_value() == url
+    assert "fake_db_password" not in repr(settings)
+    assert "fake_db_password" not in str(settings)
+
+
 def test_secret_not_exposed_in_validation_error(monkeypatch):
     monkeypatch.setenv("WEBHOOK_SECRET", FAKE_SECRET)
     monkeypatch.setenv("SIGNATURE_TOLERANCE_SECONDS", "0")
