@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from integrationkit.settings import Settings
 
 FAKE_SECRET = "whsec_test_fake_settings_secret"
+FAKE_DB_URL = "postgresql+psycopg://user:fake_pw@localhost:5433/app_test"
 
 
 @pytest.fixture(autouse=True)
@@ -15,6 +16,7 @@ def clean_env(monkeypatch):
         "DATABASE_URL",
     ):
         monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("DATABASE_URL", FAKE_DB_URL)
 
 
 def make_settings(**kwargs) -> Settings:
@@ -28,6 +30,13 @@ def test_defaults_load_with_only_secret(monkeypatch):
     assert settings.webhook_secret.get_secret_value() == FAKE_SECRET
     assert settings.signature_tolerance_seconds == 300
     assert settings.max_body_bytes == 262_144
+
+
+def test_missing_database_url_fails(monkeypatch):
+    monkeypatch.setenv("WEBHOOK_SECRET", FAKE_SECRET)
+    monkeypatch.delenv("DATABASE_URL")
+    with pytest.raises(ValidationError, match="database_url"):
+        make_settings()
 
 
 def test_missing_secret_fails():

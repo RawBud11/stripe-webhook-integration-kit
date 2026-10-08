@@ -12,7 +12,6 @@ class Settings(BaseSettings):
     # Stripe's docs warn that a tolerance of 0 disables the recency check, so it is refused.
     signature_tolerance_seconds: int = Field(default=300, gt=0)
     max_body_bytes: int = Field(default=262_144, gt=0)
-    # A real URL carries a real password, so it is treated like the webhook secret.
-    database_url: SecretStr = SecretStr(
-        "postgresql+psycopg://integrationkit:integrationkit@localhost:5432/integrationkit"
-    )
+    # Required, with no default, so no credentials live in code. A real URL carries a real
+    # password, so it is treated like the webhook secret.
+    database_url: SecretStr

@@ -143,12 +143,12 @@ CREATE TABLE webhook_events (
     livemode        BOOLEAN     NOT NULL,             -- always false here
     raw_body        BYTEA       NOT NULL,             -- exact bytes that were verified
     payload         JSONB       NOT NULL,             -- parsed copy for querying
-    signature_ts    BIGINT      NOT NULL,             -- t= from the header
-    received_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-    duplicate_count INTEGER     NOT NULL DEFAULT 0    -- times seen again after first
+    signature_ts    TIMESTAMPTZ NOT NULL,             -- t= from the header, UTC
+    received_at     TIMESTAMPTZ NOT NULL DEFAULT now(), -- set by the database
+    duplicate_count INTEGER     NOT NULL DEFAULT 0    -- added in M2: times seen again
 );
 -- Indexed but not unique: Stripe can send two distinct events for the same object.
-CREATE INDEX webhook_events_session_idx ON webhook_events (session_id);
+CREATE INDEX ix_webhook_events_session_id ON webhook_events (session_id);
 
 CREATE TYPE job_status AS ENUM ('pending', 'running', 'retrying', 'succeeded', 'dead');
 
