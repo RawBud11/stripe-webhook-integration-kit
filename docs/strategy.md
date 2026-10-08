@@ -142,11 +142,13 @@ CREATE TABLE webhook_events (
     session_id      TEXT,                             -- data.object.id (cs_test_...)
     livemode        BOOLEAN     NOT NULL,             -- always false here
     raw_body        BYTEA       NOT NULL,             -- exact bytes that were verified
-    payload         JSONB       NOT NULL,             -- parsed copy for querying
+    payload         JSONB,                            -- parsed copy; NULL if jsonb can't hold it
+    payload_error   TEXT,                             -- why payload is NULL (e.g. \u0000)
     signature_ts    TIMESTAMPTZ NOT NULL,             -- t= from the header, UTC
     received_at     TIMESTAMPTZ NOT NULL DEFAULT now(), -- set by the database
     duplicate_count INTEGER     NOT NULL DEFAULT 0    -- added in M2: times seen again
 );
+-- CHECK ((payload IS NULL) <> (payload_error IS NULL))  -- exactly one of the two
 -- Indexed but not unique: Stripe can send two distinct events for the same object.
 CREATE INDEX ix_webhook_events_session_id ON webhook_events (session_id);
 

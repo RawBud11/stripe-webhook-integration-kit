@@ -55,10 +55,18 @@ def alembic_config(test_database_url) -> Config:
     return config
 
 
+def reset_schema(engine, url: str) -> None:
+    """Drop everything in the test database. Only ever runs on a `_test` database."""
+    assert_safe_test_database(url)
+    with engine.begin() as connection:
+        connection.execute(text("DROP SCHEMA public CASCADE"))
+        connection.execute(text("CREATE SCHEMA public"))
+
+
 @pytest.fixture
-def migrated_db(db_engine, alembic_config):
-    """A freshly migrated schema for each test; dropped again afterwards."""
-    command.downgrade(alembic_config, "base")
+def migrated_db(db_engine, alembic_config, test_database_url):
+    """A freshly migrated schema for each test, whatever state the last test left."""
+    reset_schema(db_engine, test_database_url)
     command.upgrade(alembic_config, "head")
     yield db_engine
-    command.downgrade(alembic_config, "base")
+    reset_schema(db_engine, test_database_url)

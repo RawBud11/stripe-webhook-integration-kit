@@ -39,18 +39,31 @@ def store(engine, *events) -> None:
 # --- migrations ---------------------------------------------------------------------
 
 
-def test_upgrade_creates_and_downgrade_drops(db_engine, alembic_config):
+def test_upgrade_creates_and_downgrade_drops(migrated_db, alembic_config):
     command.downgrade(alembic_config, "base")
-    assert "webhook_events" not in inspect(db_engine).get_table_names()
+    assert "webhook_events" not in inspect(migrated_db).get_table_names()
 
     command.upgrade(alembic_config, "head")
-    inspector = inspect(db_engine)
+    inspector = inspect(migrated_db)
     assert "webhook_events" in inspector.get_table_names()
     indexes = {ix["name"]: ix for ix in inspector.get_indexes("webhook_events")}
     assert indexes["ix_webhook_events_session_id"]["unique"] is False
 
     command.downgrade(alembic_config, "base")
-    assert "webhook_events" not in inspect(db_engine).get_table_names()
+    assert "webhook_events" not in inspect(migrated_db).get_table_names()
+
+
+def test_each_migration_steps_down_and_up(migrated_db, alembic_config):
+    command.downgrade(alembic_config, "0001")
+    columns = {c["name"]: c for c in inspect(migrated_db).get_columns("webhook_events")}
+    assert "payload_error" not in columns
+    assert columns["payload"]["nullable"] is False
+
+    command.upgrade(alembic_config, "0002")
+    columns = {c["name"]: c for c in inspect(migrated_db).get_columns("webhook_events")}
+    assert columns["payload"]["nullable"] is True
+    checks = inspect(migrated_db).get_check_constraints("webhook_events")
+    assert [c["name"] for c in checks] == ["ck_webhook_events_payload_xor_error"]
 
 
 def test_models_match_migrations(migrated_db):
@@ -130,3 +143,32 @@ def test_text_column_rejects_null_character(migrated_db):
     """psycopg refuses NUL in text parameters before anything reaches the server."""
     with pytest.raises(DataError, match="cannot contain NUL"):
         store(migrated_db, make_event(session_id="cs_test_\u0000"))
+
+
+# --- payload / payload_error (migration 0002) -----------------------------------------
+
+
+def test_payload_may_be_null_when_error_is_recorded(migrated_db):
+    store(migrated_db, make_event(payload=None, payload_error="contains U+0000"))
+    with Session(migrated_db) as session:
+        event = session.scalars(select(WebhookEvent)).one()
+    assert event.payload is None
+    assert event.payload_error == "contains U+0000"
+
+
+@pytest.mark.parametrize(
+    "payload, payload_error",
+    [(None, None), ({"id": "evt_test_1"}, "both set")],
+)
+def test_exactly_one_of_payload_and_error(migrated_db, payload, payload_error):
+    with pytest.raises(IntegrityError, match="payload_xor_error"):
+        store(migrated_db, make_event(payload=payload, payload_error=payload_error))
+
+
+def test_downgrade_refuses_to_drop_events_without_payload(migrated_db, alembic_config):
+    store(migrated_db, make_event(payload=None, payload_error="contains U+0000"))
+    with pytest.raises(Exception, match="cannot downgrade"):
+        command.downgrade(alembic_config, "0001")
+    # Clean up so the fixture's own downgrade can run.
+    with migrated_db.begin() as connection:
+        connection.exec_driver_sql("DELETE FROM webhook_events")
