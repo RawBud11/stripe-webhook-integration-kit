@@ -18,5 +18,27 @@ services:
       timeout: 3s
       retries: 15
 
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:?set WEBHOOK_SECRET in .env}
+      SIGNATURE_TOLERANCE_SECONDS: ${SIGNATURE_TOLERANCE_SECONDS:-300}
+      MAX_BODY_BYTES: ${MAX_BODY_BYTES:-262144}
+      # Inside the Compose network the database is db:5432, not the host port.
+      DATABASE_URL: postgresql+psycopg://integrationkit:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/integrationkit
+    ports:
+      # Bound to localhost only; host port configurable because 8000 is often taken.
+      - "127.0.0.1:${API_PORT:-8001}:8000"
+    healthcheck:
+      # A TCP connect from inside the container; no extra HTTP endpoint needed.
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8000), 2).close()"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
 volumes:
   pgdata:
