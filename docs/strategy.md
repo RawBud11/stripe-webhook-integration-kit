@@ -20,7 +20,9 @@ Status: approved 2026-10-07. Nothing here has been built or run yet.
 
 ### Non-goals
 
-- No Stripe account, API keys, Stripe CLI login, or network calls to Stripe. Ever.
+- No Stripe account, API keys, Stripe CLI login, or network calls to Stripe in the
+  project, its tests or its smoke test. The only exception is the optional manual sandbox
+  check in `docs/real-stripe-check.md`, run by the author.
 - No claim of having received real Stripe traffic. All events are simulated.
 - No calls back to the Stripe API to fetch objects (a real integration often would).
 - Thin events (`v2` event notifications). Stripe's docs now recommend thin events for new

@@ -8,6 +8,8 @@ the two compared.
 > **All events are simulated.** This project has no Stripe account, uses no Stripe API
 > keys and never contacts Stripe. Every event comes from the local simulator in
 > `tools/simulate.py`, signed with Stripe's documented scheme and a fake secret.
+> An optional manual check with a real Stripe sandbox is described in
+> [docs/real-stripe-check.md](docs/real-stripe-check.md); it has not been run.
 
 Status: milestone 1 (verified intake) is built. See [docs/strategy.md](docs/strategy.md)
 for scope, architecture and milestones, and [docs/decisions.md](docs/decisions.md) for

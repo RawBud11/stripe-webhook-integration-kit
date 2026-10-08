@@ -5,8 +5,13 @@ payment event (verify signature, store once, return 2xx fast, sync to a spreadsh
 in the background with retries, a failure log and replay), then the same flow rebuilt in
 n8n and compared. See `docs/strategy.md` for scope, architecture and milestones.
 
-**Hard constraint:** there is no Stripe account. Nothing may require a Stripe account,
-Stripe API keys, or network access to Stripe. All events come from the local simulator.
+**Hard constraint:** the project, its tests and its smoke test must never require a Stripe
+account, Stripe API keys, or network access to Stripe; every event they use comes from
+the local simulator. The one exception is an optional manual check, described in
+`docs/real-stripe-check.md`, that the author runs by hand with their own sandbox
+(test-mode) keys. It is test mode only, never live mode or live keys. Claude never runs
+it or handles its keys or secrets, and nothing in the project may depend on it or on its
+result.
 
 ## Working rules
 
