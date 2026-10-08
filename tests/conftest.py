@@ -52,6 +52,8 @@ def db_engine(test_database_url):
 def alembic_config(test_database_url) -> Config:
     config = Config(str(ROOT / "alembic.ini"))
     config.attributes["database_url"] = assert_safe_test_database(test_database_url)
+    # Keep alembic.ini's logging config away from pytest's log capture.
+    config.attributes["configure_logger"] = False
     return config
 
 

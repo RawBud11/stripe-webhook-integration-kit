@@ -1,11 +1,15 @@
 """Migration and storage tests against a real PostgreSQL test database."""
 
+import os
+import subprocess
+import sys
 from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 from alembic import command
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
+from db_support import ROOT
 from sqlalchemy import inspect, select
 from sqlalchemy.exc import DataError, IntegrityError
 from sqlalchemy.orm import Session
@@ -64,6 +68,28 @@ def test_each_migration_steps_down_and_up(migrated_db, alembic_config):
     assert columns["payload"]["nullable"] is True
     checks = inspect(migrated_db).get_check_constraints("webhook_events")
     assert [c["name"] for c in checks] == ["ck_webhook_events_payload_xor_error"]
+
+
+def test_alembic_cli_logs_each_migration(migrated_db, alembic_config, test_database_url):
+    # The container runs this CLI at start; its log is the only record of what was applied.
+    command.downgrade(alembic_config, "base")
+    env = {
+        **os.environ,
+        "DATABASE_URL": test_database_url,
+        "WEBHOOK_SECRET": "whsec_test_fake_alembic_cli",
+    }
+    result = subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade", "head"],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "INFO  [alembic.runtime.migration] Running upgrade  -> 0001" in result.stderr
+    assert "Running upgrade 0001 -> 0002" in result.stderr
+    assert test_database_url not in result.stderr
 
 
 def test_models_match_migrations(migrated_db):
