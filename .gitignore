@@ -8,3 +8,21 @@ output/
 .pytest_cache/
 .ruff_cache/
 .vscode/
+
+# Standard Python entries. .env.* is left out on purpose: it would ignore .env.example.
+*.py[cod]
+*$py.class
+build/
+dist/
+.eggs/
+*.egg
+wheels/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.hypothesis/
+venv/
+env/
