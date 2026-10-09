@@ -1,29 +1,14 @@
-# CLAUDE.md
+# IntegrationKit
 
-IntegrationKit is a portfolio project: reliable webhook processing for a Stripe-style
-payment event (verify signature, store once, return 2xx fast, sync to a spreadsheet sink
-in the background with retries, a failure log and replay), then the same flow rebuilt in
-n8n and compared. See `docs/strategy.md` for scope, architecture and milestones.
+Reference integration: Stripe test-mode payment → verified webhook → PostgreSQL
+→ Google Sheets. Built in code (FastAPI) and in n8n.
 
-**Hard constraint:** the project, its tests and its smoke test must never require a Stripe
-account, Stripe API keys, or network access to Stripe; every event they use comes from
-the local simulator. The one exception is an optional manual check, described in
-`docs/real-stripe-check.md`, that the author runs by hand with their own sandbox
-(test-mode) keys. It is test mode only, never live mode or live keys. Claude never runs
-it or handles its keys or secrets, and nothing in the project may depend on it or on its
-result.
-
-## Working rules
-
-- Before writing code, state the plan in 3-6 lines and wait for approval.
-- Small steps, one logical change per commit, clear commit messages.
-- Write tests for core logic alongside the implementation, in the same change.
-- Ask before adding any dependency; explain what it does and why it is needed.
-- Secrets live only in `.env`; keep `.env.example` current. Everything uses fake data
-  (ids like `evt_test_...`, fake `whsec_...` secrets, fake customers).
-- Verify Stripe, n8n and Google details against current official docs, and say what was
-  checked (page and what it confirmed).
-- Never claim something works unless it was run and tested. Never describe simulated
-  events as real Stripe traffic.
-- After each milestone, explain what was built so the author can write
-  `docs/learning-log.md` themselves. Do not write the learning log entries.
+- The full plan is in docs/plan.md. Read the relevant section before each task.
+- Current milestone: 1 (update this line when a milestone is finished).
+- Stack: Python 3.11+, FastAPI, PostgreSQL, Docker Compose, pytest, ruff.
+- One task per prompt. Show a plan and wait for approval before writing code.
+- Write tests first where asked. Tests never use the network.
+- Stripe test mode only. Never commit secrets; .env stays out of git.
+- No AI features in this project.
+- After finishing a task, run the tests and the linter and show me the output.
+- Commit in small steps with clear messages.
