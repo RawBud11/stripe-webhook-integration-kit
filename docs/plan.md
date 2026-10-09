@@ -1,6 +1,7 @@
 # IntegrationKit: Strategy
 
-Status: approved 2026-10-07. Nothing here has been built or run yet.
+Status: approved 2026-10-07. Milestone 1 is built and verified (305 tests, smoke test
+passing; tagged v0.1.0). Milestone 2 is next.
 
 ## 1. Scope and non-goals
 
