@@ -94,7 +94,7 @@ SMOKE PASSED
 
 ## 3. M1 "done when" checks
 
-| # | Check (from `docs/strategy.md`) | Status | Evidence |
+| # | Check (from `docs/plan.md`) | Status | Evidence |
 | --- | --- | --- | --- |
 | 1 | `docker compose up` starts Postgres and the API; `alembic upgrade head` creates the tables | **Pass** | Existing stack and cold start both healthy; `alembic_version` = `0002`; `webhook_events` exists. The CLI `alembic upgrade head` was also run by hand in step 5. |
 | 2 | `verify_signature` is pure; tests cover valid, tampered, wrong secret, expired, future, rolled, `v0` only, missing, malformed, non-integer `t`, tolerance 0 | **Pass** | `tests/test_signature.py`, plus the boundary vectors |
@@ -104,7 +104,7 @@ SMOKE PASSED
 | 6 | Contract vectors checked in, verified by the official `stripe` library offline | **Pass** | 25 vectors (9 documented differences); `tests/test_stripe_crosscheck.py` |
 | 7 | `.env.example` lists every setting; no secret committed | **Pass** | The comparison and scans in section 2 |
 
-I left the checkboxes in `docs/strategy.md` unticked so you can tick them yourself after
+I left the checkboxes in `docs/plan.md` unticked so you can tick them yourself after
 reviewing.
 
 ## 4. What needs your review

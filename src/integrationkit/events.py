@@ -1,6 +1,6 @@
 """Parsing and validation of a verified webhook body. Pure functions, no I/O.
 
-Rules (docs/strategy.md):
+Rules (docs/plan.md):
 - Any event with a well-formed `id` and `type` is accepted, whatever its type.
 - `session_id` is set only for `checkout.session.*` events whose `data.object.id` looks
   like a Checkout Session id; otherwise it is None.

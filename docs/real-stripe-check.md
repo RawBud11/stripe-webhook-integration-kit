@@ -124,7 +124,7 @@ If the status is not `200`:
 | `503` | The database is down. |
 
 Write down the date, `stripe --version`, the status and the row you saw: that is the
-evidence for closing the open item in `docs/strategy.md`, section 11.
+evidence for closing the open item in `docs/plan.md`, section 11.
 
 ## 6. Clean up
 

@@ -11,7 +11,7 @@ the two compared.
 > An optional manual check with a real Stripe sandbox is described in
 > [docs/real-stripe-check.md](docs/real-stripe-check.md); it has not been run.
 
-Status: milestone 1 (verified intake) is built. See [docs/strategy.md](docs/strategy.md)
+Status: milestone 1 (verified intake) is built. See [docs/plan.md](docs/plan.md)
 for scope, architecture and milestones, and [docs/decisions.md](docs/decisions.md) for
 decisions and open questions.
 
@@ -123,7 +123,7 @@ None of the lenient cases lets a forged request through: the HMAC must still mat
 
 ## What this project proves and what it does not
 
-See the section of that name in [docs/strategy.md](docs/strategy.md). In short: it shows
+See the section of that name in [docs/plan.md](docs/plan.md). In short: it shows
 a correct, tested implementation of the documented scheme and of webhook intake
 reliability; it does not show that it has handled real Stripe traffic, because it has
 not.

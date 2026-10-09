@@ -226,23 +226,23 @@ Scaffold (pyproject, Compose with Postgres, settings, Alembic), `POST /webhooks/
 signature verification module, raw-event storage, simulator CLI, contract tests.
 
 Done when:
-- [ ] `docker compose up` starts Postgres and the API; `alembic upgrade head` creates the tables.
-- [ ] `verify_signature(raw_body, header, secret, now, tolerance)` is a pure function and
+- [x] `docker compose up` starts Postgres and the API; `alembic upgrade head` creates the tables.
+- [x] `verify_signature(raw_body, header, secret, now, tolerance)` is a pure function and
       tests cover: valid, tampered body, wrong secret, expired timestamp, future
       timestamp, rolled secret (two `v1`, one matches), only `v0` present, missing header,
       malformed header, non-integer `t`, tolerance of 0 refused.
-- [ ] Simulator produces each variant: valid, `--tamper-body`, `--wrong-secret`,
+- [x] Simulator produces each variant: valid, `--tamper-body`, `--wrong-secret`,
       `--expired`, `--duplicate`, `--rolled-secret`, `--missing-header`,
       `--malformed-header`, plus `--with-v0` and `--payment-status unpaid`, and can print
       or POST the request. `--send` targets only localhost unless `--allow-remote` is
       given, uses a timeout, and `--expect STATUS` sets the exit code. `--print` never
       shows a secret.
-- [ ] Running each simulator variant against the local API gives the expected status
+- [x] Running each simulator variant against the local API gives the expected status
       (200 or 400), shown in a recorded test run.
-- [ ] A valid event is stored with `raw_body` byte-identical to what was sent.
-- [ ] Contract test vectors (fixed secret, timestamp, body, expected signature) are
+- [x] A valid event is stored with `raw_body` byte-identical to what was sent.
+- [x] Contract test vectors (fixed secret, timestamp, body, expected signature) are
       checked in, and, if approved, verified by the official `stripe` library offline.
-- [ ] `.env.example` lists every setting; no secret is committed.
+- [x] `.env.example` lists every setting; no secret is committed.
 
 ### M2: Reliable delivery (about 22 h)
 
