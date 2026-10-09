@@ -4,8 +4,7 @@
   `LICENSE`, so the commit hashes are unchanged. Secret scan of the full history: clean.
 - Milestone 1 (verified intake) is reviewed and closed. Tagged `v0.1.0` (`828ad77`).
 - Checks before the tag: ruff clean, `REQUIRE_DB=1 pytest` 305 passed, smoke test passed.
-- Removed `docs/strategy.md` (identical to `docs/plan.md`); references updated.
-- `.gitignore` now has the standard Python entries.
+- Removed `docs/strategy.md` (identical to `docs/plan.md`); added Python `.gitignore` entries.
 - Duplicates: in M1 a duplicate is a no-op that returns 200. `duplicate_count` and the
   `session_id`+`type` check come in M2, as `docs/plan.md` says.
 - Next: Milestone 2 (reliable delivery). Decide early: create sync jobs only for
